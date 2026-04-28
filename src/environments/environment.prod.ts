@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://PLACEHOLDER/api/v1'
+  apiUrl: 'https://mygoal-frontend-production.up.railway.app'
 };
