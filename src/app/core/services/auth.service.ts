@@ -8,6 +8,7 @@ import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models/aut
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = environment.apiUrl;
+  private backendUrl = environment.apiUrl.replace('/api/v1', '');
   private userSubject = new BehaviorSubject<User | null>(this.getStoredUser());
   user$ = this.userSubject.asObservable();
 
@@ -26,7 +27,9 @@ export class AuthService {
   }
 
   loginWithGoogle(): void {
-    window.location.href = `${environment.apiUrl.replace('/api/v1', '')}/oauth2/authorization/google`;
+    const googleUrl = `${this.backendUrl}/oauth2/authorization/google`;
+    console.log('Redirecionando para:', googleUrl);
+    window.location.href = googleUrl;
   }
 
   handleOAuthCallback(token: string): void {
