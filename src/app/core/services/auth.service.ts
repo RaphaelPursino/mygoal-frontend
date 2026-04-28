@@ -27,9 +27,14 @@ export class AuthService {
   }
 
   loginWithGoogle(): void {
-    const googleUrl = `${this.backendUrl}/oauth2/authorization/google`;
-    console.log('Redirecionando para:', googleUrl);
-    window.location.href = googleUrl;
+    // Pega a URL base atual do frontend e substitui pelo backend
+    const isProduction = window.location.hostname !== 'localhost';
+    const backendUrl = isProduction
+      ? 'https://mygoal-backend-production.up.railway.app'
+      : 'http://localhost:8080';
+    
+    console.log('Backend URL:', backendUrl);
+    window.location.href = `${backendUrl}/oauth2/authorization/google`;
   }
 
   handleOAuthCallback(token: string): void {
