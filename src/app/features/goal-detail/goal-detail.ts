@@ -8,7 +8,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { GoalService } from '../../core/services/goal.service';
-import { Goal } from '../../core/models/goal.model';
+import { Goal, Mission } from '../../core/models/goal.model';
 
 @Component({
   selector: 'app-goal-detail',
