@@ -84,14 +84,18 @@ import { Goal } from '../../core/models/goal.model';
 
           <mat-card class="mission-card"
                     *ngFor="let mission of goal.todayMissions"
-                    [class.mission-done]="mission.completed">
+                    [class.mission-done]="mission.completed"
+                    [class.mission-pending]="isPastMission(mission)">
             <div class="mission-content">
               <div class="mission-icon">
-                <mat-icon [style.color]="mission.completed ? '#4caf50' : '#667eea'">
-                  {{ mission.completed ? 'check_circle' : 'radio_button_unchecked' }}
+                <mat-icon [style.color]="mission.completed ? '#4caf50' : isPastMission(mission) ? '#ff9800' : '#667eea'">
+                  {{ mission.completed ? 'check_circle' : isPastMission(mission) ? 'warning' : 'radio_button_unchecked' }}
                 </mat-icon>
               </div>
               <div class="mission-text">
+                <div class="mission-date-badge" *ngIf="isPastMission(mission)">
+                  📅 Pendente de {{ formatDate(mission.missionDate) }}
+                </div>
                 <h4 [class.done-title]="mission.completed">{{ mission.title }}</h4>
                 <p>{{ mission.description }}</p>
                 <span class="completed-time" *ngIf="mission.completedAt">
@@ -153,6 +157,8 @@ import { Goal } from '../../core/models/goal.model';
     .mission-text p { margin: 0; font-size: 13px; color: #777; line-height: 1.5; }
     .completed-time { font-size: 12px; color: #4caf50; margin-top: 6px; display: block; }
     .complete-btn { min-width: 100px; flex-shrink: 0; }
+    .mission-pending { border-left: 4px solid #ff9800 !important; }
+    .mission-date-badge { font-size: 11px; color: #ff9800; font-weight: 600; margin-bottom: 4px; }
   `]
 })
 export class GoalDetail implements OnInit {
@@ -226,5 +232,10 @@ export class GoalDetail implements OnInit {
 
   formatTime(dt: string): string {
     return new Date(dt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  isPastMission(mission: Mission): boolean {
+    const today = new Date().toISOString().split('T')[0];
+    return mission.missionDate < today && !mission.completed;
   }
 }
