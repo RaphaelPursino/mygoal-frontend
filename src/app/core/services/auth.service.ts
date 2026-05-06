@@ -27,13 +27,10 @@ export class AuthService {
   }
 
   loginWithGoogle(): void {
-    // Pega a URL base atual do frontend e substitui pelo backend
     const isProduction = window.location.hostname !== 'localhost';
     const backendUrl = isProduction
-      ? 'https://mygoal-backend-production.up.railway.app'
+      ? 'https://mygoal-backend.onrender.com'
       : 'http://localhost:8080';
-    
-    console.log('Backend URL:', backendUrl);
     window.location.href = `${backendUrl}/oauth2/authorization/google`;
   }
 
