@@ -119,7 +119,13 @@ export class Register {
     this.auth.register(this.form.value).subscribe({
       next: () => this.router.navigate(['/dashboard']),
       error: err => {
-        this.errorMsg = err.error?.message || 'Erro ao criar conta';
+        if (err.status === 400) {
+          this.errorMsg = err.error?.message || 'Erro ao criar conta';
+        } else if (err.status === 0) {
+          this.errorMsg = 'Sem conexão com o servidor. Tente novamente.';
+        } else {
+          this.errorMsg = 'Erro inesperado. Tente novamente.';
+        }
         this.loading = false;
       }
     });

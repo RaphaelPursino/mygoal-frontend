@@ -111,7 +111,13 @@ export class Login {
     this.auth.login(this.form.value).subscribe({
       next: () => this.router.navigate(['/dashboard']),
       error: err => {
-        this.errorMsg = err.error?.message || 'E-mail ou senha inválidos';
+        if (err.status === 400) {
+          this.errorMsg = err.error?.message || 'E-mail ou senha inválidos';
+        } else if (err.status === 0) {
+          this.errorMsg = 'Sem conexão com o servidor. Tente novamente.';
+        } else {
+          this.errorMsg = 'Erro inesperado. Tente novamente.';
+        }
         this.loading = false;
       }
     });
