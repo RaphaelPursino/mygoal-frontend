@@ -111,10 +111,15 @@ export class Login {
     this.auth.login(this.form.value).subscribe({
       next: () => this.router.navigate(['/dashboard']),
       error: err => {
+        console.log('Status:', err.status);
+        console.log('Error completo:', err);
+        console.log('Error.error:', err.error);
+        console.log('Error.error.message:', err.error?.message);
+        
         if (err.status === 400) {
           this.errorMsg = err.error?.message || 'E-mail ou senha inválidos';
         } else if (err.status === 0) {
-          this.errorMsg = 'Sem conexão com o servidor. Tente novamente.';
+          this.errorMsg = 'Sem conexão com o servidor.';
         } else {
           this.errorMsg = 'Erro inesperado. Tente novamente.';
         }
