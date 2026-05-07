@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -50,7 +50,10 @@ import { AuthService } from '../../../core/services/auth.service';
               <mat-hint>Mínimo 6 caracteres</mat-hint>
             </mat-form-field>
 
-            <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+            <div class="error-box" *ngIf="errorMsg">
+              <mat-icon>error_outline</mat-icon>
+              <span>{{ errorMsg }}</span>
+            </div>
 
             <button mat-raised-button color="primary" class="full-width submit-btn"
                     type="submit" [disabled]="loading">
@@ -93,7 +96,10 @@ import { AuthService } from '../../../core/services/auth.service';
     .google-btn { height: 48px; display: flex; align-items: center; gap: 10px; justify-content: center; }
     .register-link { text-align: center; margin-top: 16px; font-size: 14px; color: #666; }
     .register-link a { color: #667eea; font-weight: 500; text-decoration: none; }
-    .error-msg { color: #f44336; font-size: 13px; margin: 4px 0; }
+    .error-box { display: flex; align-items: center; gap: 8px; background: #fdecea;
+                 border-left: 4px solid #f44336; border-radius: 6px;
+                 padding: 10px 14px; margin: 8px 0; color: #c62828; font-size: 13px; }
+    .error-box mat-icon { font-size: 18px; width: 18px; height: 18px; color: #f44336; }
     mat-card-header { display: block; }
     mat-card-footer { display: block; }
   `]
@@ -104,7 +110,12 @@ export class Register {
   hidePassword = true;
   errorMsg = '';
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private auth: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {
     this.form = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -116,6 +127,8 @@ export class Register {
     if (this.form.invalid) return;
     this.loading = true;
     this.errorMsg = '';
+    this.cdr.detectChanges();
+
     this.auth.register(this.form.value).subscribe({
       next: () => this.router.navigate(['/dashboard']),
       error: err => {
@@ -127,6 +140,7 @@ export class Register {
           this.errorMsg = 'Erro inesperado. Tente novamente.';
         }
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
