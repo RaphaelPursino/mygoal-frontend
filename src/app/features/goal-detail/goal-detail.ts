@@ -31,8 +31,9 @@ import { Goal, Mission } from '../../core/models/goal.model';
       </div>
 
       <div class="empty-state" *ngIf="!loading && !goal">
+        <mat-icon>error_outline</mat-icon>
         <p>Meta não encontrada.</p>
-        <a routerLink="/dashboard">Voltar ao dashboard</a>
+        <a routerLink="/dashboard" mat-button color="primary">Voltar ao dashboard</a>
       </div>
 
       <div class="content" *ngIf="!loading && goal">
@@ -83,13 +84,13 @@ import { Goal, Mission } from '../../core/models/goal.model';
           </div>
 
           <mat-card class="mission-card"
-                    *ngFor="let mission of goal.todayMissions"
+                    *ngFor="let mission of goal.todayMissions; trackBy: trackById"
                     [class.mission-done]="mission.completed"
                     [class.mission-pending]="isPastMission(mission)">
             <div class="mission-content">
               <div class="mission-icon">
-                <mat-icon [style.color]="mission.completed ? '#4caf50' : isPastMission(mission) ? '#ff9800' : '#667eea'">
-                  {{ mission.completed ? 'check_circle' : isPastMission(mission) ? 'warning' : 'radio_button_unchecked' }}
+                <mat-icon [style.color]="getMissionIconColor(mission)">
+                  {{ getMissionIcon(mission) }}
                 </mat-icon>
               </div>
               <div class="mission-text">
@@ -124,31 +125,39 @@ import { Goal, Mission } from '../../core/models/goal.model';
     .loading { display: flex; flex-direction: column; align-items: center;
                justify-content: center; padding: 64px; gap: 16px; color: #666; }
     .empty-state { text-align: center; padding: 64px; color: #888; }
+    .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px;
+                             color: #ccc; display: block; margin: 0 auto 16px; }
     .goal-header-card { border-radius: 16px; padding: 8px; margin-bottom: 24px; }
     .goal-top { margin-bottom: 20px; }
     .status-chip { font-size: 11px; padding: 4px 12px; border-radius: 12px; font-weight: 500; }
     .status-active { background: #e3f2fd; color: #1565c0; }
     .status-completed { background: #e8f5e9; color: #2e7d32; }
+    .status-abandoned { background: #fce4ec; color: #c62828; }
     .goal-title { font-size: 24px; font-weight: 700; color: #333; margin: 12px 0 8px; }
     .goal-notes { color: #777; font-size: 14px; margin-bottom: 8px; }
     .goal-date { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #888; }
     .goal-date mat-icon { font-size: 16px; width: 16px; height: 16px; }
     .progress-section { background: #f8f9ff; border-radius: 12px; padding: 16px; margin-top: 8px; }
-    .progress-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #555; }
+    .progress-info { display: flex; justify-content: space-between;
+                     margin-bottom: 8px; font-size: 14px; color: #555; }
     .progress-pct { font-size: 20px; font-weight: 700; color: #667eea; }
     .progress-bar { height: 12px; border-radius: 6px; }
     .progress-sub { font-size: 12px; color: #888; margin-top: 8px; }
     .completed-banner { display: flex; align-items: center; gap: 10px; background: #e8f5e9;
-                        border-radius: 10px; padding: 14px; margin-top: 16px; color: #2e7d32; font-weight: 500; }
+                        border-radius: 10px; padding: 14px; margin-top: 16px;
+                        color: #2e7d32; font-weight: 500; }
     .completed-banner mat-icon { color: #f9a825; }
-    .missions-section { }
-    .section-title { display: flex; align-items: center; gap: 8px; font-size: 18px;
-                     color: #333; margin-bottom: 16px; }
+    .section-title { display: flex; align-items: center; gap: 8px;
+                     font-size: 18px; color: #333; margin-bottom: 16px; }
     .section-title mat-icon { color: #667eea; }
     .no-missions { text-align: center; padding: 32px; color: #888; }
-    .no-missions mat-icon { font-size: 40px; width: 40px; height: 40px; display: block; margin: 0 auto 8px; }
-    .mission-card { border-radius: 12px; margin-bottom: 12px; }
+    .no-missions mat-icon { font-size: 40px; width: 40px; height: 40px;
+                             display: block; margin: 0 auto 8px; }
+    .mission-card { border-radius: 12px; margin-bottom: 12px;
+                    transition: box-shadow 0.2s ease; }
+    .mission-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     .mission-done { opacity: 0.75; background: #fafafa; }
+    .mission-pending { border-left: 4px solid #ff9800 !important; }
     .mission-content { display: flex; align-items: flex-start; gap: 16px; padding: 4px; }
     .mission-icon mat-icon { font-size: 28px; width: 28px; height: 28px; margin-top: 4px; }
     .mission-text { flex: 1; }
@@ -157,8 +166,8 @@ import { Goal, Mission } from '../../core/models/goal.model';
     .mission-text p { margin: 0; font-size: 13px; color: #777; line-height: 1.5; }
     .completed-time { font-size: 12px; color: #4caf50; margin-top: 6px; display: block; }
     .complete-btn { min-width: 100px; flex-shrink: 0; }
-    .mission-pending { border-left: 4px solid #ff9800 !important; }
-    .mission-date-badge { font-size: 11px; color: #ff9800; font-weight: 600; margin-bottom: 4px; }
+    .mission-date-badge { font-size: 11px; color: #ff9800;
+                          font-weight: 600; margin-bottom: 4px; }
   `]
 })
 export class GoalDetail implements OnInit {
@@ -195,8 +204,7 @@ export class GoalDetail implements OnInit {
         this.loading = false;
         this.cdr.detectChanges();
       },
-      error: err => {
-        console.error('Erro ao carregar meta:', err);
+      error: () => {
         this.goal = null;
         this.loading = false;
         this.cdr.detectChanges();
@@ -207,22 +215,47 @@ export class GoalDetail implements OnInit {
   completeMission(missionId: string): void {
     this.completing = missionId;
     this.cdr.detectChanges();
+
     this.goalService.completeMission(missionId).subscribe({
       next: () => {
         this.completing = null;
         const id = this.route.snapshot.paramMap.get('id')!;
         this.loadGoal(id);
       },
-      error: err => {
-        console.error('Erro ao concluir missão:', err);
+      error: () => {
         this.completing = null;
         this.cdr.detectChanges();
       }
     });
   }
 
+  isPastMission(mission: Mission): boolean {
+    const today = new Date().toISOString().split('T')[0];
+    return mission.missionDate < today && !mission.completed;
+  }
+
+  getMissionIcon(mission: Mission): string {
+    if (mission.completed) return 'check_circle';
+    if (this.isPastMission(mission)) return 'warning';
+    return 'radio_button_unchecked';
+  }
+
+  getMissionIconColor(mission: Mission): string {
+    if (mission.completed) return '#4caf50';
+    if (this.isPastMission(mission)) return '#ff9800';
+    return '#667eea';
+  }
+
+  trackById(_: number, mission: Mission): string {
+    return mission.id;
+  }
+
   getStatusLabel(status: string): string {
-    const labels: any = { ACTIVE: 'Ativa', COMPLETED: 'Concluída', ABANDONED: 'Abandonada' };
+    const labels: Record<string, string> = {
+      ACTIVE: 'Ativa',
+      COMPLETED: 'Concluída',
+      ABANDONED: 'Abandonada'
+    };
     return labels[status] || status;
   }
 
@@ -231,11 +264,9 @@ export class GoalDetail implements OnInit {
   }
 
   formatTime(dt: string): string {
-    return new Date(dt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  isPastMission(mission: Mission): boolean {
-    const today = new Date().toISOString().split('T')[0];
-    return mission.missionDate < today && !mission.completed;
+    return new Date(dt).toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 }
