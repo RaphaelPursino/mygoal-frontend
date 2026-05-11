@@ -164,8 +164,6 @@ export class GoalCreate {
     this.goalService.create({ ...this.form.value, targetDate: formatted }).subscribe({
       next: goal => this.router.navigate(['/goals', goal.id]),
       error: err => {
-        console.log('Erro completo:', err);
-        console.log('err.error:', err.error);
         if (err.status === 400) {
           // Backend pode retornar message ou errors (validação)
           if (err.error?.message) {
