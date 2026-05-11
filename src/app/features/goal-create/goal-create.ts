@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -64,11 +64,15 @@ import { GoalService } from '../../core/services/goal.service';
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Data limite</mat-label>
                 <input matInput [matDatepicker]="picker" formControlName="targetDate"
-                       placeholder="Quando quer conquistar essa meta?">
+                      [min]="minDate"
+                      placeholder="Quando quer conquistar essa meta?">
                 <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
                 <mat-error *ngIf="form.get('targetDate')?.hasError('required')">
                   Data limite é obrigatória
+                </mat-error>
+                <mat-error *ngIf="form.get('targetDate')?.hasError('matDatepickerMin')">
+                  A data deve ser futura
                 </mat-error>
               </mat-form-field>
 
@@ -77,7 +81,10 @@ import { GoalService } from '../../core/services/goal.service';
                 <p>Após criar, nossa IA vai gerar automaticamente <strong>3 missões diárias</strong> personalizadas para sua meta!</p>
               </div>
 
-              <p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>
+              <div class="error-box" *ngIf="errorMsg">
+                <mat-icon>error_outline</mat-icon>
+                <span>{{ errorMsg }}</span>
+              </div>
 
               <div class="actions">
                 <button mat-stroked-button type="button" routerLink="/dashboard">
@@ -113,6 +120,10 @@ import { GoalService } from '../../core/services/goal.service';
     .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; }
     .actions button { min-width: 140px; height: 44px; }
     .error-msg { color: #f44336; font-size: 13px; margin: 8px 0; }
+    .error-box { display: flex; align-items: center; gap: 8px; background: #fdecea;
+             border-left: 4px solid #f44336; border-radius: 6px;
+             padding: 10px 14px; margin: 8px 0; color: #c62828; font-size: 13px; }
+    .error-box mat-icon { font-size: 18px; width: 18px; height: 18px; color: #f44336; }
     mat-card-header { display: block; }
   `]
 })
@@ -122,7 +133,7 @@ export class GoalCreate {
   errorMsg = '';
   minDate = new Date();
 
-  constructor(private fb: FormBuilder, private goalService: GoalService, private router: Router) {
+  constructor(private fb: FormBuilder, private goalService: GoalService, private router: Router, private cdr: ChangeDetectorRef) {
     this.form = this.fb.group({
       title: ['', Validators.required],
       notes: [''],
@@ -132,18 +143,34 @@ export class GoalCreate {
 
   onSubmit(): void {
     if (this.form.invalid) return;
+
+    const selectedDate = new Date(this.form.value.targetDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate <= today) {
+      this.errorMsg = 'A data limite deve ser uma data futura.';
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.loading = true;
     this.errorMsg = '';
+    this.cdr.detectChanges();
 
-    const value = this.form.value;
-    const date = new Date(value.targetDate);
+    const date = new Date(this.form.value.targetDate);
     const formatted = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 
-    this.goalService.create({ ...value, targetDate: formatted }).subscribe({
+    this.goalService.create({ ...this.form.value, targetDate: formatted }).subscribe({
       next: goal => this.router.navigate(['/goals', goal.id]),
       error: err => {
-        this.errorMsg = err.error?.message || 'Erro ao criar meta';
+        if (err.status === 400) {
+          this.errorMsg = err.error?.message || 'Erro ao criar meta';
+        } else {
+          this.errorMsg = 'Erro inesperado. Tente novamente.';
+        }
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
