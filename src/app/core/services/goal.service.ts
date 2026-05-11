@@ -6,7 +6,7 @@ import { Goal, GoalRequest, Mission } from '../models/goal.model';
 
 @Injectable({ providedIn: 'root' })
 export class GoalService {
-  private apiUrl = `${environment.apiUrl}/goals`;
+  private readonly apiUrl = `${environment.apiUrl}/goals`;
 
   constructor(private http: HttpClient) {}
 

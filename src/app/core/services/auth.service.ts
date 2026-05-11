@@ -7,8 +7,8 @@ import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models/aut
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = environment.apiUrl;
-  private backendUrl = environment.apiUrl.replace('/api/v1', '');
+  private readonly apiUrl = environment.apiUrl;
+  private readonly backendUrl = environment.apiUrl.replace('/api/v1', '');
   private userSubject = new BehaviorSubject<User | null>(this.getStoredUser());
   user$ = this.userSubject.asObservable();
 
@@ -27,19 +27,19 @@ export class AuthService {
   }
 
   loginWithGoogle(): void {
-    const isProduction = window.location.hostname !== 'localhost';
-    const backendUrl = isProduction
-      ? 'https://mygoal-backend.onrender.com'
-      : 'http://localhost:8080';
-    window.location.href = `${backendUrl}/oauth2/authorization/google`;
+    window.location.href = `${this.backendUrl}/oauth2/authorization/google`;
   }
 
   handleOAuthCallback(token: string): void {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const user: User = { name: payload.name || payload.sub, email: payload.sub };
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    this.userSubject.next(user);
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const user: User = { name: payload.name || payload.sub, email: payload.sub };
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      this.userSubject.next(user);
+    } catch {
+      this.router.navigate(['/login']);
+    }
   }
 
   logout(): void {
@@ -65,7 +65,11 @@ export class AuthService {
   }
 
   private getStoredUser(): User | null {
-    const u = localStorage.getItem('user');
-    return u ? JSON.parse(u) : null;
+    try {
+      const u = localStorage.getItem('user');
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
   }
 }

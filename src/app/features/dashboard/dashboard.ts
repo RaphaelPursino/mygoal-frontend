@@ -222,7 +222,9 @@ export class Dashboard implements OnInit {
         this.goals = [...this.goals.filter(g => g.id !== id)];
         this.cdr.detectChanges();
       },
-      error: err => console.error('Erro ao excluir:', err)
+      error: () => {
+        // Silently fail - user will see goal still present
+      }
     });
   }
 
@@ -239,7 +241,11 @@ export class Dashboard implements OnInit {
   }
 
   getStatusLabel(status: string): string {
-    const labels: any = { ACTIVE: 'Ativa', COMPLETED: 'Concluída', ABANDONED: 'Abandonada' };
+    const labels: Record<string, string> = {
+      ACTIVE: 'Ativa',
+      COMPLETED: 'Concluída',
+      ABANDONED: 'Abandonada'
+    };
     return labels[status] || status;
   }
 
