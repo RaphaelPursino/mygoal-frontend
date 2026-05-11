@@ -164,8 +164,18 @@ export class GoalCreate {
     this.goalService.create({ ...this.form.value, targetDate: formatted }).subscribe({
       next: goal => this.router.navigate(['/goals', goal.id]),
       error: err => {
+        console.log('Erro completo:', err);
+        console.log('err.error:', err.error);
         if (err.status === 400) {
-          this.errorMsg = err.error?.message || 'Erro ao criar meta';
+          // Backend pode retornar message ou errors (validação)
+          if (err.error?.message) {
+            this.errorMsg = err.error.message;
+          } else if (err.error?.errors) {
+            const firstError = Object.values(err.error.errors)[0] as string;
+            this.errorMsg = firstError;
+          } else {
+            this.errorMsg = 'Erro ao criar meta. Verifique os dados.';
+          }
         } else {
           this.errorMsg = 'Erro inesperado. Tente novamente.';
         }
