@@ -188,7 +188,7 @@ O Vercel fará deploy automático a cada push na branch `main`.
 
 ## 🔗 Repositório do Backend
 
-👉 [mygoal-backend](https://github.com/seu-usuario/mygoal-backend)
+👉 [mygoal-backend](https://github.com/RaphaelPursino/mygoal-backend)
 
 ## 📄 Licença
 
